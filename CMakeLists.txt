@@ -45,6 +45,11 @@ endif()
 
 set(CMAKE_SKIP_BUILD_RPATH True)
 
+# manual set cuda arch
+if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+  set(CMAKE_CUDA_ARCHITECTURES 75)
+endif()
+
 project(TensorRT
         LANGUAGES CXX CUDA
         VERSION ${TRT_VERSION}
@@ -119,6 +124,7 @@ endif()
 include_directories(
     ${CUDA_INCLUDE_DIRS}
     ${CUDNN_ROOT_DIR}/include
+    ${TRT_LIBPATH}/include
 )
 find_library(CUDNN_LIB cudnn HINTS
     ${CUDA_TOOLKIT_ROOT_DIR} ${CUDNN_ROOT_DIR} PATH_SUFFIXES lib64 lib/x64 lib)
