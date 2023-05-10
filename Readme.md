@@ -10,7 +10,7 @@ github上能下载到的为开源部分，从[官网](https://developer.nvidia.c
 2. cudnn ， 下载的include和lib文件放到cuda路径
 3. 配置闭源包的变量路径：
     - export TRT_LIBPATH=`pwd`/TensorRT-8.6.1.6
-    - cd到开源文件夹，mkdir build & cd build, 使用编译命令为：cmake .. -DTRT_LIB_DIR=$TRT_LIBPATH/lib --DTRT_INC_DIR=$TRT_LIBPATH/include -DTRT_OUT_DIR=`pwd`/out
+    - cd到开源文件夹，mkdir build & cd build, 使用编译命令为：cmake .. -DTRT_LIB_DIR=$TRT_LIBPATH/lib -DTRT_OUT_DIR=`pwd`/out
     - 注意第二点的-DTRT_LIB_DIR=$TRT_LIBPATH/**lib**
     - make -j$(nproc)
 
