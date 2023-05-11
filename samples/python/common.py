@@ -137,6 +137,7 @@ def locate_files(data_paths, filenames, err_msg=""):
 
 
 class HostDeviceMem:
+    """关联host和device侧的内存，host侧内存以numpy格式开辟。"""
     """Pair of host and device memory, where the host memory is wrapped in a numpy array"""
     def __init__(self, size: int, dtype: np.dtype):
         nbytes = size * dtype.itemsize
@@ -153,6 +154,7 @@ class HostDeviceMem:
 
     @host.setter
     def host(self, arr: np.ndarray):
+        """host侧内存设置"""
         if arr.size > self.host.size:
             raise ValueError(
                 f"Tried to fit an array of size {arr.size} into host memory of size {self.host.size}"
@@ -192,6 +194,7 @@ def allocate_buffers(engine: trt.ICudaEngine, profile_idx: Optional[int] = None)
         shape = engine.get_tensor_shape(binding) if profile_idx is None else engine.get_tensor_profile_shape(binding, profile_idx)[-1]
         shape_valid = np.all([s >= 0 for s in shape])
         if not shape_valid and profile_idx is None:
+            # engine是dynamic输入时，要指定按min\opt\max的哪一个shap来分配空间。否则报错
             raise ValueError(f"Binding {binding} has dynamic shape, " +\
                 "but no profile was specified.")
         size = trt.volume(shape)
@@ -251,6 +254,7 @@ def _do_inference_base(inputs, outputs, stream, execute_async):
 # inputs and outputs are expected to be lists of HostDeviceMem objects.
 def do_inference(context, bindings, inputs, outputs, stream, batch_size=1):
     def execute_async():
+        """execute_async：隐式batch输入，即只有CHW维度"""
         context.execute_async(batch_size=batch_size, bindings=bindings, stream_handle=stream)
     return _do_inference_base(inputs, outputs, stream, execute_async)
 
@@ -259,5 +263,13 @@ def do_inference(context, bindings, inputs, outputs, stream, batch_size=1):
 # inputs and outputs are expected to be lists of HostDeviceMem objects.
 def do_inference_v2(context, bindings, inputs, outputs, stream):
     def execute_async():
+        """execute_async_v2：显式batch输入，NCHW维度"""
         context.execute_async_v2(bindings=bindings, stream_handle=stream)
     return _do_inference_base(inputs, outputs, stream, execute_async)
+
+## context执行推理的几个api
+# 1. context.execute()          : 同步推理 [DEPRECATED]  输入是explicit batch,  NCHW
+# 2. context.execute_async()    ：异步推理               输入是隐式batch, CHW
+# 3. context.execute_async_v2() : 异步推理 [DEPRECATED]  输入是explicit batch显示batch, NCHW
+# 4. context.execute_async_v3() ：异步推理
+# 5. context.execute_v2()       : 同步推理               输入是explicit batch,  NCHW
