@@ -33,6 +33,10 @@ def _do_graph_surgery(raw_model_path, trt_model_path):
     graph = gs.import_onnx(onnx.load(raw_model_path))
 
     # Replace unsupported Hardmax with our CustomHardmax op
+    # 用自定义的op 'CustomHardmax' 替换trt不支持的'Hardmax' op
+    # 这里添加的op类型为CustomHardmax，在onnx的graph中，仅仅表示一个符号，不能用onnx做推理。
+    # 如果需要onnx做推理，则需要再onnx-runtime实现该op的运算规则。
+    # 在tensorrt中解析到该op类型时，需要将CustomHardmax 类型实现为一个op plugin插件！！
     for node in graph.nodes:
         if node.op == 'Hardmax':
             node.op = 'CustomHardmax'
@@ -47,6 +51,7 @@ def _do_graph_surgery(raw_model_path, trt_model_path):
     #
     # So, we will replace the subgraph Compress(Transpose_29, Cast(Reshape(Hardmax)))
     # with the subgraph Einsum(Transpose_29, Hardmax) where the equation in Einsum takes the dot product.
+    # 用'Einsum' op, 替换 两个'Transpose_29, Hardmax' 两个op
     node_by_name = {node.name : node for node in graph.nodes}
     transpose_node = node_by_name['Transpose_29']
     compress_node  = node_by_name['Compress_31']
@@ -58,14 +63,23 @@ def _do_graph_surgery(raw_model_path, trt_model_path):
         inputs=[hardmax_node.outputs[0], transpose_node.outputs[0]],
         outputs=[compress_node.outputs[0]]
     )
-    graph.nodes.append(einsum_node)
+    graph.nodes.append(einsum_node) # 新加节点直接入nodes 列表
 
     # Separate the old subgraph which will be deleted with graph.cleanup()
+    # 通过clean删除已经分离出来的子图
+    #  A    B
+    #   \  /
+    #     C
+    #     |
+    #     D
+    # A: transpose_node, B：hardmax_node， D: compress_node
+    #  通过一下三个clean, 则会保留A之前，B之前，D之后的op，而删除C节点。
     hardmax_node.o().inputs.clear()
     transpose_node.o().inputs.clear()
     compress_node.outputs.clear()
 
     # Also remove the CategoryMapper nodes which convert strings to integers as the first step in the model.
+    # 删除字符串到整数的映射op
     # We need to convert the following structure:
     #
     #      Input as                        Converted to
@@ -83,6 +97,7 @@ def _do_graph_surgery(raw_model_path, trt_model_path):
     category_mapper_nodes = [node for node in graph.nodes if node.op == 'CategoryMapper']
     for node in category_mapper_nodes:
         # Remove CategoryMapper node from onnx graph
+        # # 删除节点
         graph.nodes.remove(node)
 
         # Also remove references its inputs in the graph's inputs
@@ -90,9 +105,10 @@ def _do_graph_surgery(raw_model_path, trt_model_path):
             graph.inputs.remove(input_tensor)
 
         # The graph's new inputs are the Integer tokens output by CategoryMapper
+        # 添加输入
         graph.inputs += node.outputs
 
-        # Save String->Int map
+        # Save String->Int map 保存word to index的映射，保存到文件
         with open(node.name + ".json", "w") as fp:
             json.dump(node.attrs, fp)
 
