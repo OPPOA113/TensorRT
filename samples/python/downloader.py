@@ -199,7 +199,7 @@ if __name__ == "__main__":
     main()
 
 
-TRT_DATA_DIR = None
+TRT_DATA_DIR = './' #None   # onnx_to_tensorrt.py 调试时设置
 
 
 def getFilePath(path):

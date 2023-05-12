@@ -188,6 +188,7 @@ class PostprocessYOLO(object):
         # Using the candidates from the previous (loop) step, we apply the non-max suppression
         # algorithm that clusters adjacent bounding boxes to a single bounding box:
         nms_boxes, nms_categories, nscores = list(), list(), list()
+        # 按类别 nms
         for category in set(categories):
             idxs = np.where(categories == category)
             box = boxes[idxs]
@@ -302,18 +303,19 @@ class PostprocessYOLO(object):
         height = boxes[:, 3]
 
         areas = width * height
-        ordered = box_confidences.argsort()[::-1]
+        ordered = box_confidences.argsort()[::-1]   # 概率倒序排序
 
         keep = list()
         while ordered.size > 0:
             # Index of the current element:
             i = ordered[0]
             keep.append(i)
+            # 留下的高概率bbox与其余的bbox的交集
             xx1 = np.maximum(x_coord[i], x_coord[ordered[1:]])
             yy1 = np.maximum(y_coord[i], y_coord[ordered[1:]])
             xx2 = np.minimum(x_coord[i] + width[i], x_coord[ordered[1:]] + width[ordered[1:]])
             yy2 = np.minimum(y_coord[i] + height[i], y_coord[ordered[1:]] + height[ordered[1:]])
-
+            # 留下的高概率bbox与其余的bbox的并集
             width1 = np.maximum(0.0, xx2 - xx1 + 1)
             height1 = np.maximum(0.0, yy2 - yy1 + 1)
             intersection = width1 * height1
@@ -325,7 +327,9 @@ class PostprocessYOLO(object):
             # The goal of the NMS algorithm is to reduce the number of adjacent bounding-box
             # candidates to a minimum. In this step, we keep only those elements whose overlap
             # with the current bounding box is lower than the threshold:
+            # 取iou< 阈值的第一个缩引
             indexes = np.where(iou <= self.nms_threshold)[0]
+            # 更新需要nms的bbox缩引
             ordered = ordered[indexes + 1]
 
         keep = np.array(keep)

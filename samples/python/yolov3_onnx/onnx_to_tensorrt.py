@@ -65,6 +65,7 @@ def draw_bboxes(image_raw, bboxes, confidences, categories, all_categories, bbox
 
 def get_engine(onnx_file_path, engine_file_path=""):
     """Attempts to load a serialized engine if available, otherwise builds a new TensorRT engine and saves it."""
+    """onnx model to trt engine"""
 
     def build_engine():
         """Takes an ONNX file and creates a TensorRT engine to run inference with"""
@@ -115,8 +116,8 @@ def main():
     """Create a TensorRT engine for ONNX-based YOLOv3-608 and run inference."""
 
     # Try to load a previously generated YOLOv3-608 network graph in ONNX format:
-    onnx_file_path = "yolov3.onnx"
-    engine_file_path = "yolov3.trt"
+    onnx_file_path = "samples/python/yolov3_onnx/yolov3.onnx"
+    engine_file_path = "samples/python/yolov3_onnx/yolov3.trt"
     # Download a dog image and save it to the following file path:
     input_image_path = getFilePath("samples/python/yolov3_onnx/dog.jpg")
     # Two-dimensional tuple with the target network's (spatial) input resolution in HW ordered

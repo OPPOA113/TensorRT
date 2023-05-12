@@ -76,9 +76,12 @@ python3 model.py
       mkdir build && pushd build
       cmake .. && make -j
       popd
+      # popd作用：从目录堆栈中删除目录
       ```
 
       **NOTE:** If any of the dependencies are not installed in their default locations, you can manually specify them. For example:
+      
+      **注意** 编译时指定闭源库so目录和include目录，即设置参数-DTRT_LIB=/path/lib -DTRT_INCLUDE=/path/include
       ```bash
       cmake .. -DCMAKE_CUDA_COMPILER=/usr/local/cuda-x.x/bin/nvcc # (Or adding /path/to/nvcc into $PATH)
                -DCUDA_INC_DIR=/usr/local/cuda-x.x/include/  # (Or adding /path/to/cuda/include into $CPLUS_INCLUDE_PATH)
@@ -106,6 +109,7 @@ python3 model.py
    ```bash
    python3 sample.py
    ```
+   **Note** 安装cuda-python包：cuda的python接口API。
 
 3.  Verify that the sample ran successfully.
    ```

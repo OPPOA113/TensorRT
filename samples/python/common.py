@@ -198,6 +198,7 @@ def allocate_buffers(engine: trt.ICudaEngine, profile_idx: Optional[int] = None)
             raise ValueError(f"Binding {binding} has dynamic shape, " +\
                 "but no profile was specified.")
         size = trt.volume(shape)
+        # 判断engine是否为implicit batch： implicit_batch表示input_shape不带batch维度
         if engine.has_implicit_batch_dimension:
             size *= engine.max_batch_size
         dtype = np.dtype(trt.nptype(engine.get_tensor_dtype(binding)))
