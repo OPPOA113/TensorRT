@@ -76,7 +76,7 @@ T readFromBuffer(uint8_t const*& buffer)
 // Static class fields initialization
 PluginFieldCollection HardmaxPluginCreator::mFC{};
 std::vector<PluginField> HardmaxPluginCreator::mPluginAttributes;
-
+//  插件注册
 REGISTER_TENSORRT_PLUGIN(HardmaxPluginCreator);
 
 namespace
@@ -346,11 +346,13 @@ char const* HardmaxPlugin::getPluginNamespace() const noexcept
     return mNamespace.c_str();
 }
 
+// 构造函数用于初始化需要传入plugin中的权重和参数。
 HardmaxPluginCreator::HardmaxPluginCreator()
 {
     mPluginAttributes.clear();
 
     // Consistent with the ONNX model attr fields
+    // 字段设置， 与onnx字段对齐
     static auto const axisField = PluginField("axis", nullptr, PluginFieldType::kINT32, 1);
     mPluginAttributes.emplace_back(axisField);
 
@@ -368,22 +370,27 @@ char const* HardmaxPluginCreator::getPluginVersion() const noexcept
     return kHARDMAX_VERSION;
 }
 
+/** NO NEED TO MODIFY **/
 PluginFieldCollection const* HardmaxPluginCreator::getFieldNames() noexcept
 {
     return &mFC;
 }
 
+/** NO NEED TO MODIFY **/
 char const* HardmaxPluginCreator::getPluginNamespace() const noexcept
 {
     return mNamespace.c_str();
 }
 
+/** NO NEED TO MODIFY **/
 void HardmaxPluginCreator::setPluginNamespace(char const* libNamespace) noexcept
 {
     ASSERT(libNamespace != nullptr);
     mNamespace = libNamespace;
 }
 
+// 创建插件实例
+// 通过PluginFieldCollection将plugin需要的权重和参数，并调用插件类的第一个构造函数创建plugin
 IPluginV2DynamicExt* HardmaxPluginCreator::createPlugin(char const* name, PluginFieldCollection const* fc) noexcept
 {
     // Set default value
@@ -391,8 +398,9 @@ IPluginV2DynamicExt* HardmaxPluginCreator::createPlugin(char const* name, Plugin
 
     for (int32_t i = 0; i < fc->nbFields; i++)
     {
-        if (!strcmp(fc->fields[i].name, "axis"))
+        if (!strcmp(fc->fields[i].name, "axis"))     // strcmp 字符串相等，则返回0
         {
+            // 插件axis字段的类型强制为kINT32
             ASSERT(fc->fields[i].type == PluginFieldType::kINT32);
             axis = *static_cast<int32_t const*>(fc->fields[i].data);
         }

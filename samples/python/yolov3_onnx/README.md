@@ -64,6 +64,23 @@ when running these scripts. An error will be thrown if not. Taking `TRT_DATA_DIR
     Running inference on image dog.jpg...
     Saved image with bounding boxes of detected objects to dog_bboxes.jpg.
     ```
+    **Note**
+    仅仅用engine做推理：
+    1. load engine: 
+        - runtime反序列化得到engine
+        - engine创建execution context
+    2. engine 获得网络的输入输出name\shape\type,max_batchsize，以及build过程的配置min\opt\max信息
+    3. 根据explicit\implicit,sync\aync方式，选择合适的excution api推理
+    ```Python
+    trt_outputs=[]
+    with get_engine(onnx_file_path, engine_file_path) as engine, engine.create_execution_context() as context:
+        inputs, outputs, bindings, stream = common.allocate_buffers(engine)
+        # Do inference
+        print("Running inference on image {}...".format(input_image_path))
+        # Set host input to the image. The common.do_inference function will copy the input to the GPU before executing.
+        inputs[0].host = image
+        trt_outputs = common.do_inference_v2(context, bindings=bindings, inputs=inputs, outputs=outputs, stream=stream)
+    ```
 
 3.  Verify that the sample ran successfully. If the sample runs successfully you should see output similar to the following:
     ```

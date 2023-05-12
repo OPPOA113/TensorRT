@@ -72,10 +72,11 @@ def build_engine(model_path):
     config.set_memory_pool_limit(trt.MemoryPoolType.WORKSPACE, common.GiB(1))
 
     # The input text length is variable, so we need to specify an optimization profile.
+    # 可变文本长度输入，需要指定一个最优化配置
     profile = builder.create_optimization_profile()
     for i in range(network.num_inputs):
         input = network.get_input(i)
-        assert input.shape[0] == -1
+        assert input.shape[0] == -1 # dynamic batch 模型，batch维度为-1
         min_shape = [1] + list(input.shape[1:])
         opt_shape = [8] + list(input.shape[1:])
         max_shape = [MAX_TEXT_LENGTH] + list(input.shape[1:])
@@ -138,7 +139,8 @@ def main():
 
     testcases = [
         ('Garry the lion is 5 years old. He lives in the savanna.', 'Where does the lion live?'),
-        ('A quick brown fox jumps over the lazy dog.', 'What color is the fox?')
+        ('A quick brown fox jumps over the lazy dog.', 'What color is the fox?'),
+        ('A girl name Lily who is my lover.', 'Who is my lover?')
     ]
 
     print("\n=== Testing ===")

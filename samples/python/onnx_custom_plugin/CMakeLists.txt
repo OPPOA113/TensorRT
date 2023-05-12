@@ -66,6 +66,7 @@ get_filename_component(SAMPLES_COMMON_DIR ${CMAKE_SOURCE_DIR}/../../common/ ABSO
 include_directories(${CUDA_INC_DIR} ${TRT_INCLUDE} ${CMAKE_SOURCE_DIR}/plugin/ ${SAMPLES_COMMON_DIR})
 
 # Define Hardmax plugin library target
+# 自定义plugin的基本模板文件：customHardmaxPlugin.cpp、customHardmaxPlugin.h
 add_library(customHardmaxPlugin MODULE
   ${SAMPLES_COMMON_DIR}/logger.cpp
   ${CMAKE_SOURCE_DIR}/plugin/customHardmaxPlugin.cpp

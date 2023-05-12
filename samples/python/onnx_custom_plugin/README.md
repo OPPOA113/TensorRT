@@ -69,7 +69,11 @@ python3 model.py
 
 ## Running the sample
 
+   自定义plugin的模板。
+
 1.  Build the plugin and its corresponding Python bindings.
+
+   cmakelist.txt中可看到基本模板文件要求。 
 
    - On Linux, run:
       ```bash
